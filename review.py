@@ -214,14 +214,34 @@ class InteractiveDiffReviewer:
         print(f"  {Colors.RED}Rejected: {len(rejected_hunks)} changes{Colors.ENDC}")
         print(f"  {Colors.YELLOW}Skipped: {len(hunks) - len(approved_hunks) - len(rejected_hunks)} changes{Colors.ENDC}")
         
-        # Save decision
-        self.decisions['partial'][label] = {
-            'file': file_path,
-            'approved': len(approved_hunks),
-            'rejected': len(rejected_hunks),
-            'total': len(hunks),
-            'timestamp': datetime.now().isoformat()
-        }
+        # SMART DECISION: If ALL hunks approved -> move to approved
+        # If ALL hunks rejected -> move to rejected  
+        # Otherwise -> stays in partial
+        if len(approved_hunks) == len(hunks):
+            # All approved - move to approved section
+            self.decisions['approved'][label] = file_path
+            # Remove from partial if exists
+            if label in self.decisions['partial']:
+                del self.decisions['partial'][label]
+            print(f"\n{Colors.GREEN}✅ File fully approved and ready to apply!{Colors.ENDC}")
+        elif len(rejected_hunks) == len(hunks):
+            # All rejected - move to rejected section
+            self.decisions['rejected'][label] = file_path
+            # Remove from partial if exists
+            if label in self.decisions['partial']:
+                del self.decisions['partial'][label]
+            print(f"\n{Colors.RED}❌ File fully rejected.{Colors.ENDC}")
+        else:
+            # Mixed or skipped - save in partial
+            self.decisions['partial'][label] = {
+                'file': file_path,
+                'approved': len(approved_hunks),
+                'rejected': len(rejected_hunks),
+                'total': len(hunks),
+                'timestamp': datetime.now().isoformat()
+            }
+            print(f"\n{Colors.YELLOW}⚠️  Partial review saved. File has mixed decisions.{Colors.ENDC}")
+        
         self._save_decisions()
         
         return {
@@ -341,7 +361,14 @@ class InteractiveDiffReviewer:
         print(f"Run: {Colors.BOLD}./figma-sync/apply_approved.sh{Colors.ENDC}")
     
     def apply_decisions(self):
-        """Apply all approved changes"""
+        """Apply all approved changes (including fully approved partials)"""
+        # Check for fully approved files in partial section
+        for label, details in self.decisions.get('partial', {}).items():
+            if isinstance(details, dict) and details.get('approved', 0) == details.get('total', 0):
+                # This file was fully approved, move it to approved
+                self.decisions['approved'][label] = details['file']
+                print(f"{Colors.CYAN}ℹ️  {label} was fully approved in detailed review{Colors.ENDC}")
+        
         if not self.decisions['approved']:
             print(f"{Colors.YELLOW}No approved changes to apply{Colors.ENDC}")
             return
@@ -447,12 +474,63 @@ def main():
                        help='Show side-by-side comparison')
     parser.add_argument('--sync-dir', default='./figma-sync',
                        help='Sync directory location')
+    parser.add_argument('--fix-decisions', action='store_true',
+                       help='Fix decisions file (move fully approved partials)')
+    parser.add_argument('--show-decisions', action='store_true',
+                       help='Show current decisions')
     
     args = parser.parse_args()
     
     reviewer = InteractiveDiffReviewer(args.sync_dir)
     
-    if args.review:
+    if args.fix_decisions:
+        # Fix existing decisions file
+        fixed = False
+        for label, details in list(reviewer.decisions.get('partial', {}).items()):
+            if isinstance(details, dict):
+                if details.get('approved', 0) == details.get('total', 0) and details.get('total', 0) > 0:
+                    # Fully approved - move to approved
+                    reviewer.decisions['approved'][label] = details['file']
+                    del reviewer.decisions['partial'][label]
+                    print(f"{Colors.GREEN}✅ Moved {label} to approved (all {details['total']} changes approved){Colors.ENDC}")
+                    fixed = True
+                elif details.get('rejected', 0) == details.get('total', 0) and details.get('total', 0) > 0:
+                    # Fully rejected - move to rejected
+                    reviewer.decisions['rejected'][label] = details['file']
+                    del reviewer.decisions['partial'][label]
+                    print(f"{Colors.RED}❌ Moved {label} to rejected (all {details['total']} changes rejected){Colors.ENDC}")
+                    fixed = True
+        
+        if fixed:
+            reviewer._save_decisions()
+            print(f"\n{Colors.GREEN}✅ Decisions file fixed and saved!{Colors.ENDC}")
+            print(f"{Colors.CYAN}Now you can run: python3 review.py --apply{Colors.ENDC}")
+        else:
+            print(f"{Colors.YELLOW}No fixes needed. Partial reviews have mixed decisions.{Colors.ENDC}")
+    
+    elif args.show_decisions:
+        # Show current decisions
+        print(f"\n{Colors.BOLD}{Colors.CYAN}📊 Current Decisions:{Colors.ENDC}")
+        print(f"{Colors.YELLOW}{'='*50}{Colors.ENDC}")
+        
+        if reviewer.decisions['approved']:
+            print(f"\n{Colors.GREEN}✅ APPROVED ({len(reviewer.decisions['approved'])}):{Colors.ENDC}")
+            for label, file in reviewer.decisions['approved'].items():
+                print(f"  {label}: {file}")
+        
+        if reviewer.decisions['rejected']:
+            print(f"\n{Colors.RED}❌ REJECTED ({len(reviewer.decisions['rejected'])}):{Colors.ENDC}")
+            for label, file in reviewer.decisions['rejected'].items():
+                print(f"  {label}: {file}")
+        
+        if reviewer.decisions['partial']:
+            print(f"\n{Colors.YELLOW}⚠️  PARTIAL ({len(reviewer.decisions['partial'])}):{Colors.ENDC}")
+            for label, details in reviewer.decisions['partial'].items():
+                if isinstance(details, dict):
+                    print(f"  {label}: {details['file']}")
+                    print(f"    Approved: {details['approved']}/{details['total']}, Rejected: {details['rejected']}/{details['total']}")
+    
+    elif args.review:
         result = reviewer.review_file(args.review)
         if result['status'] == 'reviewed':
             print(f"\n{Colors.GREEN}Review complete!{Colors.ENDC}")
@@ -481,6 +559,8 @@ def main():
         print("  python3 review.py --review U001     # Detailed review of one file")
         print("  python3 review.py --apply           # Apply approved changes")
         print("  python3 review.py --smart-diff U001 # Smart diff analysis")
+        print("  python3 review.py --fix-decisions   # Fix decisions file")
+        print("  python3 review.py --show-decisions  # Show current decisions")
         print("\nQuick Start:")
         print("  1. Run: python3 review.py --quick")
         print("  2. Press 'a' to accept, 'r' to reject, 'v' to view details")
