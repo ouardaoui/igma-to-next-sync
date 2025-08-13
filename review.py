@@ -265,7 +265,7 @@ class InteractiveDiffReviewer:
                 print(f"  Changes: {Colors.GREEN}+{added}{Colors.ENDC} / {Colors.RED}-{removed}{Colors.ENDC}")
                 
                 # Quick decision
-                print(f"  {Colors.GREEN}[a]{Colors.ENDC}ccept  {Colors.RED}[r]{Colors.ENDC}eject  {Colors.YELLOW}[v]{Colors.ENDC}iew  {Colors.CYAN}[s]{Colors.ENDC}kip")
+                print(f"  {Colors.GREEN}[a]{Colors.ENDC}ccept  {Colors.RED}[r]{Colors.ENDC}eject  {Colors.YELLOW}[v]{Colors.ENDC}iew  {Colors.CYAN}[s]{Colors.ENDC}kip  {Colors.BLUE}[q]{Colors.ENDC}uit")
                 choice = input(f"  Choice: ").lower().strip()
                 
                 if choice == 'a':
@@ -276,13 +276,20 @@ class InteractiveDiffReviewer:
                     print(f"  {Colors.RED}❌ Rejected{Colors.ENDC}\n")
                 elif choice == 'v':
                     self.review_file(label)
+                elif choice == 'q':
+                    print(f"\n{Colors.YELLOW}⚠️  Review stopped. Changes saved but NOT applied.{Colors.ENDC}")
+                    print(f"{Colors.CYAN}ℹ️  To apply approved changes later, run:{Colors.ENDC}")
+                    print(f"    {Colors.BOLD}python3 review.py --apply{Colors.ENDC}\n")
+                    self._save_decisions()
+                    self._show_final_summary()
+                    return  # Exit the function early
                 else:
                     print(f"  {Colors.YELLOW}⏩ Skipped{Colors.ENDC}\n")
         
         self._save_decisions()
         self._show_final_summary()
     
-    def _show_final_summary(self):
+    def _show_final_summary(self, ask_to_apply=True):
         """Show final summary of decisions"""
         print(f"\n{Colors.BOLD}{Colors.CYAN}📊 Final Review Summary{Colors.ENDC}")
         print(f"{Colors.YELLOW}{'='*50}{Colors.ENDC}")
@@ -290,9 +297,25 @@ class InteractiveDiffReviewer:
         print(f"{Colors.RED}Rejected: {len(self.decisions['rejected'])} files{Colors.ENDC}")
         print(f"{Colors.YELLOW}Partial: {len(self.decisions['partial'])} files{Colors.ENDC}")
         
-        # Generate apply script
+        # Generate apply script if there are approved changes
         if self.decisions['approved']:
             self._generate_apply_script()
+            
+            # Ask if user wants to apply now (only if ask_to_apply is True)
+            if ask_to_apply:
+                print(f"\n{Colors.BOLD}{Colors.CYAN}Would you like to apply the approved changes now?{Colors.ENDC}")
+                print(f"  {Colors.GREEN}[y]{Colors.ENDC}es  {Colors.RED}[n]{Colors.ENDC}o")
+                apply_now = input(f"  Choice: ").lower().strip()
+                
+                if apply_now == 'y':
+                    self.apply_decisions()
+                else:
+                    print(f"\n{Colors.YELLOW}ℹ️  Changes saved but not applied.{Colors.ENDC}")
+                    print(f"{Colors.CYAN}To apply later, run:{Colors.ENDC}")
+                    print(f"    {Colors.BOLD}python3 review.py --apply{Colors.ENDC}")
+                    print(f"    {Colors.BOLD}./figma-sync/apply_approved.sh{Colors.ENDC}")
+        else:
+            print(f"\n{Colors.YELLOW}No approved changes to apply.{Colors.ENDC}")
     
     def _generate_apply_script(self):
         """Generate a script to apply approved changes"""

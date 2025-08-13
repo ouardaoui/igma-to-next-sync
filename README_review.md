@@ -76,7 +76,7 @@ During review, just press:
 | `r` | **Reject** | Skip this change |
 | `v` | **View** | See full diff details |
 | `s` | **Skip** | Decide later |
-| `q` | **Quit** | Save and exit |
+| `q` | **Quit** | Save progress and exit (changes NOT applied) |
 
 ## 💡 Complete Workflow
 
@@ -153,8 +153,21 @@ python3 review.py --quick && python3 review.py --apply
 ==================================================
 [U001] Button.tsx
   Changes: +25 / -10
-  [a]ccept  [r]eject  [v]iew  [s]kip
+  [a]ccept  [r]eject  [v]iew  [s]kip  [q]uit
   Choice: _
+```
+
+**After pressing 'q':**
+```
+⚠️  Review stopped. Changes saved but NOT applied.
+ℹ️  To apply approved changes later, run:
+    python3 review.py --apply
+
+📊 Final Review Summary
+==================================================
+Approved: 5 files
+Rejected: 2 files
+Partial: 0 files
 ```
 
 ### Detailed Mode Display
