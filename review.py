@@ -2,6 +2,7 @@
 """
 Interactive Diff Reviewer
 Makes reviewing and applying changes from Figma exports super easy!
+https://www.youtube.com/watch?v=3AolNt0GPG4&list=LL&index=207
 """
 
 import os
@@ -565,6 +566,5 @@ def main():
         print("  1. Run: python3 review.py --quick")
         print("  2. Press 'a' to accept, 'r' to reject, 'v' to view details")
         print("  3. Run: python3 review.py --apply")
-
 if __name__ == "__main__":
     main()
