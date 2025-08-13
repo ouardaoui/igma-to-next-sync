@@ -112,12 +112,6 @@ Create a `config.json` file for default settings (optional):
 }
 ```
 
-## 🤝 Contributing
-
-Feel free to modify these scripts for your needs. They're designed to be:
-- **Modular**: Use individually or together
-- **Safe**: Always create backups by default
-- **Transparent**: Clear reporting of all changes
 
 ## 📝 License
 
