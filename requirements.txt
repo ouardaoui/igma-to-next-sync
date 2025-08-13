@@ -1,0 +1,8 @@
+# Python requirements for figma_analyse project
+# All libraries below are part of the Python standard library and do not need to be installed:
+# os, json, shutil, hashlib, difflib, pathlib, datetime, typing, subprocess, re, argparse
+
+# Add external libraries below if needed, e.g.:
+# requests
+# numpy
+# pandas

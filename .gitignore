@@ -1,0 +1,138 @@
+# Figma Project Management Tools - Git Ignore File
+
+# =========================
+# Python Files to KEEP
+# =========================
+# Git will track these:
+# *.py - All Python scripts
+# *.sh - All shell scripts
+# README*.md - All documentation
+
+# =========================
+# Ignore: Python
+# =========================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Python package files
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# =========================
+# Ignore: Analysis Output
+# =========================
+# Backup directories
+backups/
+backup_*/
+backup_imports_*/
+
+# Analysis reports (except README files)
+*.txt
+*.log
+*.diff
+!README*.txt
+
+# Sync output directories
+figma-sync/
+my-sync/
+*-sync/
+
+# Report directories
+reports/
+analysis-reports/
+00_REPORTS/*.json
+01_NEW_FOLDERS/
+02_NEW_FILES/
+03_UPDATED_FILES/
+04_DELETED_ITEMS/
+
+# =========================
+# Ignore: Project Files
+# =========================
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# =========================
+# Ignore: Test Projects
+# =========================
+test-project/
+frontend/
+labgenz.ai/
+Desktop/
+~/Desktop/
+
+# =========================
+# Ignore: Temporary Files
+# =========================
+*.tmp
+*.temp
+*.cache
+.cache/
+tmp/
+temp/
+
+# =========================
+# Ignore: Config Files
+# =========================
+config.json
+.env
+.env.local
+.env.*.local
+
+# =========================
+# KEEP These Files
+# =========================
+# Explicitly include (use ! to negate ignore)
+!*.py
+!*.sh
+!README.md
+!README_*.md
+!LICENSE
+!requirements.txt
+!.gitignore
+
+# =========================
+# Example Git Commands
+# =========================
+# To add only Python and Shell scripts:
+# git add *.py *.sh README*.md
+#
+# To check what will be tracked:
+# git status
+#
+# To force add an ignored file:
+# git add -f specific_file.txt
