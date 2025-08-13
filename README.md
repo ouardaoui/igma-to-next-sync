@@ -148,4 +148,4 @@ For issues or questions:
 3. Review error messages - they're designed to be helpful!
 
 ---
-*Last Updated: 2024*
+*Last Updated: 2025*
